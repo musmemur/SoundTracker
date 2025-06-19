@@ -1,12 +1,10 @@
 import {axiosInstance} from "../app/axiosInstance.ts";
 
-export async function fetchUserRating(releaseId: string): Promise<number | null> {
+export async function fetchUserRating(releaseId: string, userId: string): Promise<number | null> {
     try {
-        const token = localStorage.getItem('token');
-        const response = await axiosInstance.post(`/ReleaseRating/get`, {releaseId}, {
+        const response = await axiosInstance.post(`/ReleaseRating/get`, {releaseId, userId}, {
             headers: {
                 "Content-Type": "application/json",
-                "Authorization": `Bearer ${token}`
             }
         });
 

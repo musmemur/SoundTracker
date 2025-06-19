@@ -35,7 +35,7 @@ export const UserRatingContainer = ({releaseId}: UserRatingContainerProps) => {
 
     useEffect(() => {
         if (authUser?.userId && releaseId) {
-            dispatch(fetchUserInteraction(releaseId));
+            dispatch(fetchUserInteraction(releaseId, authUser.userId));
         }
     }, [authUser?.userId, releaseId, dispatch]);
 

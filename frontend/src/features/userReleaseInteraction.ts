@@ -76,12 +76,12 @@ export const userReleaseInteractionSlice = createSlice({
 });
 
 export const fetchUserInteraction =
-    (releaseId: string): (dispatch: Dispatch<DispatchAction>) =>
+    (releaseId: string, userId: string): (dispatch: Dispatch<DispatchAction>) =>
         Promise<void> =>
         async (dispatch) => {
             try {
                 dispatch(setLoading(true));
-                const { isSaved, userRating, userReview } = await fetchUserReleaseInteraction(releaseId);
+                const { isSaved, userRating, userReview } = await fetchUserReleaseInteraction(releaseId, userId);
 
                 dispatch(setInteraction({
                     releaseId,

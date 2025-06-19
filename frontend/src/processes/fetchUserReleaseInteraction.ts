@@ -8,10 +8,10 @@ interface UserReleaseInteraction {
     userReview: string | null;
 }
 
-export async function fetchUserReleaseInteraction(releaseId: string): Promise<UserReleaseInteraction> {
+export async function fetchUserReleaseInteraction(releaseId: string, userId: string): Promise<UserReleaseInteraction> {
     const [isSaved, userRating, userReview] = await Promise.all([
         checkSavedReleaseByUser(releaseId),
-        fetchUserRating(releaseId),
+        fetchUserRating(releaseId, userId),
         fetchUserReview(releaseId),
     ]);
 

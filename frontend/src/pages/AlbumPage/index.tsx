@@ -12,7 +12,6 @@ const Header = lazy(() => import("../../widgets/Header"));
 
 export const AlbumPage = () => {
     const [release, setRelease] = useState<ReleaseInfoType | null>(null);
-
     const [isLoading, setIsLoading] = useState(true);
     const navigate = useNavigate();
     const { releaseId } = useParams<{ releaseId: string }>();

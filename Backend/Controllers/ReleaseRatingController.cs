@@ -71,7 +71,6 @@ public class ReleaseRatingController(AppDbContext dbContext, UserService userSer
     }
 
     [HttpPost("get")]
-    [Authorize]
     public async Task<IActionResult> GetUserRating([FromBody]GetReleaseRatingRequest request, CancellationToken ct)
     {
         var release = await dbContext.Releases
@@ -84,12 +83,8 @@ public class ReleaseRatingController(AppDbContext dbContext, UserService userSer
             return NotFound("Release not found");
         }
 
-        var userId = userService.GetUserId();
-        if (userId == null)
-            return Unauthorized(new { message = "Пользователь не авторизован" });
-
         var rating = await dbContext.ReleaseRatings
-            .FirstOrDefaultAsync(r => r.UserId == userId && r.ReleaseId == release.Id, ct);
+            .FirstOrDefaultAsync(r => r.UserId == request.UserId && r.ReleaseId == release.Id, ct);
     
         return rating == null ? Ok(null) : Ok(new { rating.Rating });
     }
