@@ -38,7 +38,7 @@ export const UserPage = () => {
                         name: release.title,
                         artist: release.artist,
                         image: release.releasePhoto
-                    }));
+                    })).reverse();
 
                     setSavedReleases(formattedReleases);
                 }
@@ -54,7 +54,7 @@ export const UserPage = () => {
                         artist: release.artist,
                         image: release.releasePhoto,
                         rating: userData.ratings[index].rating
-                    }));
+                    })).reverse();
 
                     setRatedReleases(formattedReleases);
                 }

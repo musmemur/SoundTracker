@@ -8,10 +8,11 @@ import {SavedRelease} from "../../entities/SavedRelease.ts";
 interface ReleaseSectionProps {
     sectionTitle: string;
     releases: Release[] | ReleaseWithRating[] | SavedRelease[];
+    showAllProp?: boolean;
 }
 
-const ReleasesSection: React.FC<ReleaseSectionProps> = ({sectionTitle, releases}) => {
-    const [showAll, setShowAll] = useState(false);
+const ReleasesSection: React.FC<ReleaseSectionProps> = ({sectionTitle, releases, showAllProp}) => {
+    const [showAll, setShowAll] = useState(showAllProp);
 
     const releasesToShow = showAll ? releases : releases.slice(0, 4);
 
@@ -23,7 +24,7 @@ const ReleasesSection: React.FC<ReleaseSectionProps> = ({sectionTitle, releases}
         <div className={styles.releasesSection}>
             <div className={styles.releasesSectionTop}>
                 <div>{sectionTitle}</div>
-                {releases.length > 4 && (
+                {!showAllProp && releases.length > 4 && (
                     <button
                         className={styles.moreButton}
                         onClick={() => setShowAll(!showAll)}
