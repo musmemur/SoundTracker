@@ -7,7 +7,7 @@ const store = configureStore({
         loadAuthUser: loadAuthUserReducer,
         userReleaseInteraction: userReleaseInteractionReducer
     }
-});
+})
 
 export type RootState = ReturnType<typeof store.getState>;
 export type AppDispatch = ThunkDispatch<RootState, unknown, UnknownAction>;

@@ -12,9 +12,7 @@ const initialState: UserState = {
     value: null
 };
 
-export type AppThunk = ThunkAction<void, RootState, unknown, UnknownAction>;
-
-export const loadAuthUserSlice = createSlice({
+const loadAuthUserSlice = createSlice({
     name: "loadAuthUser",
     initialState,
     reducers: {
@@ -27,7 +25,7 @@ export const loadAuthUserSlice = createSlice({
     }
 });
 
-export const loadAuthUser = (): AppThunk => async (dispatch) => {
+export const loadAuthUser = (): ThunkAction<void, RootState, unknown, UnknownAction> => async (dispatch) => {
     try {
         const fetchedUser = await fetchAuthUserData();
         fetchedUser.userPhoto = fetchedUser.userPhoto || userPhotoPlaceholder;

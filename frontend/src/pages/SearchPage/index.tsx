@@ -1,6 +1,6 @@
 import styles from './index.module.scss';
 import {useLocation, useNavigate} from "react-router";
-import {lazy, Suspense, useCallback, useEffect, useState} from "react";
+import {lazy, Suspense, useCallback, useEffect, useReducer, } from "react";
 import HeaderSkeleton from "../../shared/ui/Skeletons/HeaderSkeleton";
 import ReleasesSectionSkeleton from "../../shared/ui/Skeletons/ReleasesSectionSkeleton";
 import Skeleton from "react-loading-skeleton";
@@ -10,21 +10,59 @@ import {searchReleases} from "../../processes/searchReleases.ts";
 const Header = lazy(() => import("../../widgets/Header"));
 const ReleasesSection = lazy(() => import("../../widgets/ReleasesSection"));
 
+type StateType = {
+    albums: [] | Release[];
+    page: number;
+    isLoading: boolean;
+    isMoreLoading: boolean;
+}
+
+type ActionType = {
+    type: string;
+    newAlbums?: [] | Release[];
+}
+
 export const SearchPage = () => {
     const navigate = useNavigate();
-    const [albums, setAlbums] = useState<Release[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
-    const [isMoreLoading, setIsMoreLoading] = useState(false);
-    const [page, setPage] = useState<number>(1);
 
+    const initialState = {
+        albums: [], page: 1, isLoading: true, isMoreLoading: false
+    }
+
+    const reducer = (state: StateType, action: ActionType) => {
+        switch (action.type) {
+            case 'INIT_VALUES':
+                return { ...initialState };
+            case 'LOAD_MORE':
+                return { ...state, isMoreLoading: true };
+            case 'FINALLY':
+                return { ...state, isLoading: false, isMoreLoading: false };
+            case 'ADD_DATA': {
+                const existingUrls = new Set(state.albums.map(album => album.url || album.name));
+                const newAlbums = action.newAlbums?.filter(album =>
+                    !existingUrls.has(album.url || album.name) && album.image?.[0]?.['#text']
+                );
+
+                return {
+                    ...state,
+                    albums: [...state.albums, ...(newAlbums ?? [])],
+                    page: state.page + 1
+                };
+            }
+            default:
+                return state;
+        }
+    };
+
+    const [state, dispatch] = useReducer(reducer, initialState);
     const location = useLocation();
     const searchParams = new URLSearchParams(location.search);
     const searchValue = searchParams.get("search");
 
-    const scrollHandler = (e) => {
-        if (e.target.documentElement.scrollHeight - (e.target.documentElement.scrollTop + window.innerHeight) < 500) {
+    const scrollHandler = () => {
+        if (document.documentElement.scrollHeight - (document.documentElement.scrollTop + window.innerHeight) < 500) {
             console.log('scroll');
-            setIsMoreLoading(true);
+            dispatch({type: 'LOAD_MORE'});
         }
     }
 
@@ -33,50 +71,37 @@ export const SearchPage = () => {
             navigate('/');
             return
         }
-
         try {
             const queryString = encodeURIComponent(searchValue);
             const newAlbums = await searchReleases(queryString, page)
-
-            setAlbums(prev => {
-                const existingIds = new Set(prev.map(album => album.url || album.name));
-                const uniqueNewAlbums = newAlbums.filter(album =>
-                    !existingIds.has(album.url || album.name) && album.image?.[0]?.['#text']
-                );
-                return [...prev, ...uniqueNewAlbums];
-            });
-            setPage(prev => prev+1);
-
+            dispatch({type: "ADD_DATA", newAlbums})
         } catch (error) {
             console.error('Error fetching data:', error);
         } finally {
-            setIsLoading(false);
-            setIsMoreLoading(false);
+            dispatch({type: 'FINALLY'});
         }
     }, [navigate, searchValue]);
 
     useEffect(() => {
         if (!searchValue) return;
-        setAlbums([]);
-        setPage(1);
-        setIsLoading(true);
+        dispatch({type: 'INIT_VALUES'})
 
-        fetchData(page);
+        fetchData(state.page);
 
-        document.addEventListener('scroll', scrollHandler);
+        document.addEventListener('scroll', scrollHandler, {passive: true});
 
         return function ()  {
             document.removeEventListener('scroll', scrollHandler);
         }
-    }, [fetchData, page, searchValue]);
+    }, [fetchData, searchValue]);
 
     useEffect(() => {
-        if (isMoreLoading) {
-            fetchData(page);
+        if (state.isMoreLoading) {
+            fetchData(state.page);
         }
-    }, [fetchData, isMoreLoading, page]);
+    }, [fetchData, state.isMoreLoading, state.page]);
 
-    if (isLoading) {
+    if (state.isLoading) {
         return (
             <>
                 <HeaderSkeleton/>
@@ -99,7 +124,7 @@ export const SearchPage = () => {
                 <div className={styles.searchResult}>
                     Результаты по запросу <span>"{searchValue}"</span>
                 </div>
-                <ReleasesSection sectionTitle="Альбомы" releases={albums} showAllProp={true}/>
+                <ReleasesSection sectionTitle="Альбомы" releases={state.albums} showAllProp={true}/>
             </Suspense>
         </>
     );
