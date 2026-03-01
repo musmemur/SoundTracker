@@ -47,7 +47,7 @@ interface SetErrorAction {
 
 type DispatchAction = SetLoadingAction | SetInteractionAction | SetErrorAction;
 
-export const userReleaseInteractionSlice = createSlice({
+const userReleaseInteractionSlice = createSlice({
     name: 'userReleaseInteraction',
     initialState,
     reducers: {

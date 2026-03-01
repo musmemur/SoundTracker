@@ -7,7 +7,7 @@ import {fetchUserRating} from "../../processes/fetchUserRating.ts";
 import {ReviewModal} from "../../entities/ReviewModal.ts";
 import {ReleaseRating} from "../../shared/ui/ReleaseRating";
 
-export type UserReviewProps = {
+type UserReviewProps = {
     review: ReviewModal;
 }
 
