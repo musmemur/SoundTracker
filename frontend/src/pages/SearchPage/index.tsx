@@ -1,20 +1,18 @@
 import styles from './index.module.scss';
 import {useLocation, useNavigate} from "react-router";
 import {lazy, Suspense, useCallback, useEffect, useState} from "react";
-import {axiosInstance} from "../../app/axiosInstance.ts";
 import HeaderSkeleton from "../../shared/ui/Skeletons/HeaderSkeleton";
 import ReleasesSectionSkeleton from "../../shared/ui/Skeletons/ReleasesSectionSkeleton";
 import Skeleton from "react-loading-skeleton";
 import {Release} from "../../entities/Release.ts";
-import {ReleaseWithRating} from "../../entities/ReleaseWithRating.ts";
-import {SavedRelease} from "../../entities/SavedRelease.ts";
+import {searchReleases} from "../../processes/searchReleases.ts";
 
 const Header = lazy(() => import("../../widgets/Header"));
 const ReleasesSection = lazy(() => import("../../widgets/ReleasesSection"));
 
 export const SearchPage = () => {
     const navigate = useNavigate();
-    const [albums, setAlbums] = useState<Release[] | ReleaseWithRating[] | SavedRelease[]>([]);
+    const [albums, setAlbums] = useState<Release[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isMoreLoading, setIsMoreLoading] = useState(false);
     const [page, setPage] = useState<number>(1);
@@ -38,11 +36,7 @@ export const SearchPage = () => {
 
         try {
             const queryString = encodeURIComponent(searchValue);
-            const response = await axiosInstance.get(
-                `/Search?query=${queryString}&page=${page}`
-            );
-
-            const newAlbums = response.data.albums || [];
+            const newAlbums = await searchReleases(queryString, page)
 
             setAlbums(prev => {
                 const existingIds = new Set(prev.map(album => album.url || album.name));
@@ -74,11 +68,10 @@ export const SearchPage = () => {
         return function ()  {
             document.removeEventListener('scroll', scrollHandler);
         }
-    }, [searchValue]);
+    }, [fetchData, page, searchValue]);
 
     useEffect(() => {
         if (isMoreLoading) {
-            //setPage(page)
             fetchData(page);
         }
     }, [fetchData, isMoreLoading, page]);
