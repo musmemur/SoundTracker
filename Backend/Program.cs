@@ -4,6 +4,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Microsoft.OpenApi.Models;
 using Backend.Services;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -57,11 +58,15 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 builder.Services.AddCors(options =>
 {
-    options.AddDefaultPolicy(policy =>
+    options.AddPolicy("AllowFrontend", policy =>
     {
-        policy.WithOrigins("http://localhost:5173");
-        policy.AllowAnyHeader();
-        policy.AllowAnyMethod();
+        policy.WithOrigins(
+                "http://localhost:5173",
+                "http://localhost:5000",
+                "http://localhost:3000"
+            )
+            .AllowAnyHeader()
+            .AllowAnyMethod();
     });
 });
 
@@ -69,15 +74,37 @@ var app = builder.Build();
 
 using var scope = app.Services.CreateScope();
 await using var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-//await dbContext.Database.MigrateAsync();
+var retries = 10;
+var delay = TimeSpan.FromSeconds(3);
 
-if (app.Environment.IsDevelopment())
+while (retries > 0)
+{
+    try
+    {
+        await dbContext.Database.MigrateAsync();
+        Console.WriteLine("✅ Database migrated");
+        break;
+    }
+    catch (Exception ex)
+    {
+        retries--;
+        Console.WriteLine($"❌ DB not ready. Retries left: {retries}");
+        Console.WriteLine(ex.Message);
+
+        if (retries == 0)
+            throw;
+
+        await Task.Delay(delay);
+    }
+}
+
+if (app.Environment.IsDevelopment() || app.Environment.IsEnvironment("Docker"))
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
 
-app.UseCors();
+app.UseCors("AllowFrontend");
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
